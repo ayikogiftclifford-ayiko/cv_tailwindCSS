@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="output.css">
+    <title>tailwind.css</title>
+</head>
+<body>
+    <div class="flex flex-col p-8 bg-gray-100 md:flex-row gap-6">
+        <section class="flex justify-center my-4 md:basis-[30%]">
+            <style>
+                body { background-color: #023308; }
+                body > div.flex { background-color: #dbeafe !important; }
+            </style>
+        </section>
+
+            <section class="mb-4">
+                 <img
+                class="w-[3in] h-[3in] rounded-sm border-2 border-gray-300 bg-white object-cover shadow-sm mx-auto"
+                src="cli.jpg"
+                alt="Passport-style photo of Ayiko Gift Clliford"
+                style="width:1.5in;height:1.5in;"
+                 />
+                <h1 class="text-2xl font-bold text-blue-900">AYIKO GIFT CLLIFORD</h1>
+                <h2 class="font-bold text-blue-900">Student of Muni University</h2>
+                <hr>
+            </section>
+
+            <section>
+                <h3 class="text-blue-900">CONTACT</h3>
+                <ul class="space-y-1">
+                    <li><a href="mailto:ayikogiftclliford@gmail.com" class="text-blue-700">Email</a></li>
+                    <li><a href="http://wa.me/qr/UZ2ZBRJBY6MEH1" class="text-blue-700">WhatsApp</a></li>
+                    <li><a href="https://www.linkedin.com/in/your-profile" class="text-blue-700">LinkedIn</a></li>
+                    <li><a href="tel:+256784638852" class="text-blue-700">Telephone Number</a></li>
+                </ul>
+            </section>
+
+            <hr class="my-4">
+
+            <section class="mb-4">
+                <h3 class="text-blue-900">SKILLS</h3>
+                <ul class="list-disc pl-5">
+                    <li>Software installation & configuration</li>
+                    <li>Photo editing</li>
+                    <li>Network setup & management</li>
+                    <li>Problem solving</li>
+                    <li>Software development</li>
+                </ul>
+            </section>
+            <hr class="my-4">
+
+            <section class="basis-full bg-white p-6 md:basis-[70%] rounded">
+                <h3 class="text-blue-900">EDUCATION</h3>
+                <div class="mb-4 p-4 bg-blue-50 border-l-4 border-blue-200 rounded">
+                    <p class="mt-2 text-gray-700 leading-relaxed">My educational background has equipped me with a solid understanding of IT, including systems administration, and networking gained through coursework and hands-on projects.</p>
+                </div>
+                <table class="w-full text-left mt-3">
+                    <thead>
+                        <tr>
+                            <th class="pr-4">Institution</th>
+                            <th class="pr-4">Qualification</th>
+                            <th class="pr-4">Year</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="pr-4">Muni University</td>
+                            <td class="pr-4">Bachelor of Information Technology</td>
+                            <td class="pr-4">2025 to date</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-4">Wandi Progressive SS</td>
+                            <td class="pr-4">Uganda Advanced Certificate of Education</td>
+                            <td class="pr-4">2023-2024</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-4">Sts. Peter and Paul Seminary</td>
+                            <td class="pr-4">Uganda Certificate of Education</td>
+                            <td class="pr-4">2017-2020</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <hr class="my-4">
+
+            <section aria-labelledby="experience" class="basis-full bg-white p-6 rounded">
+                <h3 id="experience" class="text-blue-900">EXPERIENCE</h3>
+                <p class="font-semibold">Relevant experience across IT support, networking, and front-end work</p>
+
+                <div class="mt-4 space-y-4">
+                    <article class="p-4 bg-gray-50 rounded border border-gray-200">
+                        <header class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-semibold text-blue-900">IT Support Intern</h4>
+                            </div>
+                        </header>
+                        <ul class="list-disc pl-5 mt-2 text-sm text-gray-700 space-y-1">
+                            <li>Installed and configured software on Windows and Linux systems.</li>
+                            <li>Troubleshot hardware, OS, and application issues; reduced ticket resolution time.</li>
+                            <li>Provided small-business network setup, documentation, and training.</li>
+                        </ul>
+                    </article>
+
+                    <article class="p-4 bg-gray-50 rounded border border-gray-200">
+                        <ul class="list-disc pl-5 mt-2 text-sm text-gray-700 space-y-1">
+                            <li>Implemented responsive UI with Tailwind CSS and utility-first patterns.</li>
+                            <li>Optimized layouts and assets for performance and accessibility.</li>
+                        </ul>
+                    </article>
+                </div>
+            </section>
+
+            <hr class="my-4">
+
+            <section aria-labelledby="referees" class="mb-6">
+                <h3 id="referees" class="text-blue-900 text-xl font-semibold mb-4">REFEREES</h3>
+                <div class="grid gap-4 md:grid-cols-2">
+                    <article class="flex flex-col bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition">
+                        <p class="font-semibold text-blue-900">Mr. Andama Emmanuel</p>
+                        <p class="text-sm text-gray-600">CEO — Happy Group of Companies</p>
+                        <div class="mt-3 flex items-center gap-3">
+                            <a href="tel:+256784638852" class="text-sm px-3 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100">Call</a>
+                        </div>
+                    </article>
+
+                    <article class="flex flex-col bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition">
+                        <p class="font-semibold text-blue-900">Mr. Ezuma Pascal</p>
+                        <p class="text-sm text-gray-600">Head of Department — Cinema Phone Center</p>
+                        <div class="mt-3 flex items-center gap-3">
+                            <a href="tel:+256784638852" class="text-sm px-3 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100">Call</a>
+                        </div>
+                    </article>
+                </div>
+            </section>
+    </div>
+    <footer class="mt-6">
+        <p class="italic text-center text-sm text-blue-900">&copy; 2025 Ayiko Gift Clliford</p>
+    </footer>
+</body>
+</html>

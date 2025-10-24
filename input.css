@@ -1,27 +1,35 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base { 
-      @layer base {
-    * {
-      @apply box-border m-0 p-0;
+@layer components {
+    .skill-bar {
+        @apply w-full bg-gray-200 rounded-full h-2.5;
     }
-
-    body {
-      @apply font-sans bg-gray-300 w-full h-screen leading-[30px] text-[17px];
+    
+    .skill-progress {
+        @apply h-2.5 rounded-full bg-blue-600;
     }
-
-    section { 
-        @apply mb-4;
-    } 
-
-    h3 {
-        @apply font-bold;
+    
+    .contact-icon {
+        @apply w-5 h-5 text-blue-600;
     }
-
-    hr { 
-        @apply mb-4 border-none bg-black h-[1px];
+    
+    .section-title {
+        @apply text-2xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-blue-200;
+    }
+    
+    .card {
+        @apply bg-white rounded-xl shadow-lg p-6;
+    }
+    
+    .timeline-item {
+        @apply border-l-4 border-blue-500 pl-4;
+    }
+    
+    .tag {
+        @apply bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium;
     }
 }
-}
+

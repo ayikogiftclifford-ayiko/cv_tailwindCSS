@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MuniStay | Secure Authentication Gateway</title>
+    <title>MuniStay Core | Next-Gen Multi-Tenant Platform</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,11 +21,11 @@
                         mono: ['"Fira Code"', 'monospace']
                     },
                     colors: {
-                        primary: '#1e40af',
-                        surface: '#f8fafc',
-                    },
-                    boxShadow: {
-                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                        darkBg: '#090d16',
+                        darkSurface: '#111827',
+                        darkCard: '#1f2937',
+                        accentBlue: '#2563eb',
+                        accentNeon: '#10b981'
                     }
                 }
             }
@@ -32,384 +33,372 @@
     </script>
 
     <style>
-        body { background-color: #f1f5f9; scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
-        .view-section, #app-core, #auth-gateway { display: none; opacity: 0; transform: translateY(10px); transition: opacity 0.4s ease, transform 0.4s ease; }
+        body { background-color: #090d16; scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; color: #f3f4f6; }
+        .view-section { display: none; opacity: 0; transform: translateY(8px); transition: opacity 0.3s ease, transform 0.3s ease; }
         .view-active { display: block; opacity: 1; transform: translateY(0); }
-        .auth-form-active { display: block; animation: fadeIn 0.3s ease-out forwards; }
-        .auth-form-hidden { display: none; }
+        .sidebar-item-active { background-color: #2563eb !important; color: #ffffff !important; }
         
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
-        
+        /* Custom Scrollbars for Dark Theme */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        
-        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.5); }
+        ::-webkit-scrollbar-track { background: #090d16; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
     </style>
 </head>
-<body class="text-slate-800 antialiased font-sans flex flex-col min-h-screen">
+<body class="font-sans flex flex-col lg:flex-row min-h-screen overflow-x-hidden">
 
     <div id="toast-container" class="fixed top-6 right-6 z-[100] flex flex-col gap-3 max-w-sm w-full pointer-events-none"></div>
 
-    <div id="auth-gateway" class="view-active min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-slate-900">
-        <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-            <div class="absolute -top-[20%] -right-[10%] w-[70%] h-[70%] rounded-full bg-blue-600/20 blur-[120px]"></div>
-            <div class="absolute -bottom-[20%] -left-[10%] w-[60%] h-[60%] rounded-full bg-emerald-600/20 blur-[120px]"></div>
+    <header class="lg:hidden w-full bg-darkSurface border-b border-slate-800 px-4 py-3 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center gap-2">
+            <div class="h-8 w-8 bg-accentBlue text-white rounded-lg flex items-center justify-center">
+                <i class="ph-fill ph-buildings text-lg"></i>
+            </div>
+            <span class="text-sm font-extrabold tracking-tight">MuniStay</span>
+        </div>
+        <button onclick="App.toggleMobileSidebar()" class="text-slate-400 hover:text-white p-2">
+            <i class="ph-bold ph-list text-2xl"></i>
+        </button>
+    </header>
+
+    <aside id="main-sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-darkSurface border-r border-slate-800 transform -translate-x-full lg:translate-x-0 lg:static lg:flex flex-col transition-transform duration-300 ease-in-out shrink-0">
+        <div class="p-6 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 bg-accentBlue text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
+                    <i class="ph-fill ph-buildings text-xl"></i>
+                </div>
+                <div>
+                    <span class="text-base font-extrabold tracking-tight block text-white">MuniStay</span>
+                    <span class="text-[9px] font-mono text-accentNeon tracking-widest block uppercase">Arua Hub</span>
+                </div>
+            </div>
+            <button onclick="App.toggleMobileSidebar()" class="lg:hidden text-slate-400 hover:text-white">
+                <i class="ph-bold ph-x text-xl"></i>
+            </button>
         </div>
 
-        <div class="w-full max-w-md relative z-10">
-            <div class="text-center mb-8">
-                <div class="inline-flex h-16 w-16 bg-primary text-white rounded-2xl items-center justify-center shadow-lg shadow-blue-600/30 mb-4 transform rotate-3">
-                    <i class="ph-fill ph-buildings text-3xl"></i>
+        <div id="sidebar-user-token" class="p-4 mx-4 my-4 bg-darkBg border border-slate-800 rounded-xl hidden">
+            <div class="flex items-center gap-3">
+                <div class="h-8 w-8 rounded-full bg-slate-700 text-white flex items-center justify-center font-bold text-xs" id="avatar-letters">MU</div>
+                <div class="overflow-hidden">
+                    <div id="user-display-name" class="text-xs font-bold text-white truncate">Profile Name</div>
+                    <div id="user-display-role" class="text-[10px] text-slate-500 uppercase font-mono tracking-wider truncate">Role Payload</div>
                 </div>
-                <h1 class="text-3xl font-extrabold text-white tracking-tight">MuniStay Connect</h1>
-                <p class="text-slate-400 text-sm mt-1">Secure Ecosystem Authentication</p>
             </div>
+        </div>
 
-            <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 sm:p-8 shadow-2xl">
-                
-                <form id="form-login" class="auth-form-active" onsubmit="App.handleLogin(event)">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="text-[10px] font-bold text-slate-300 uppercase tracking-wider block mb-1.5">Email Address</label>
-                            <div class="relative">
-                                <i class="ph-fill ph-envelope-simple absolute left-3 top-3.5 text-slate-400"></i>
-                                <input type="email" id="login-email" required class="w-full bg-slate-900/50 border border-slate-700 text-white text-sm rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-slate-300 uppercase tracking-wider block mb-1.5">Cryptographic Password</label>
-                            <div class="relative">
-                                <i class="ph-fill ph-lock-key absolute left-3 top-3.5 text-slate-400"></i>
-                                <input type="password" id="login-password" required class="w-full bg-slate-900/50 border border-slate-700 text-white text-sm rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
-                            </div>
-                        </div>
-                        <button type="submit" class="w-full bg-primary hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-primary/30 mt-2">
-                            Authenticate Session
-                        </button>
-                    </div>
-                    
-                    <div class="mt-6 p-4 bg-slate-900/50 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1">
-                        <div class="font-bold text-slate-300 mb-2 uppercase tracking-wider">Demo Access Nodes</div>
-                        <div class="flex justify-between"><span>student@muni.ac.ug</span> <span>pass123</span></div>
-                        <div class="flex justify-between"><span>hostel@munistay.com</span> <span>pass123</span></div>
-                        <div class="flex justify-between"><span>admin@munistay.com</span> <span>pass123</span></div>
-                    </div>
+        <nav class="flex-grow px-4 space-y-1.5 overflow-y-auto">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2 block">System Vectors</div>
+            
+            <button onclick="App.navigate('gateway')" id="btn-nav-gateway" class="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i class="ph-bold ph-keyhole text-base"></i> Authentication Key
+            </button>
+            <button onclick="App.navigate('student')" id="btn-nav-student" class="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all hidden">
+                <i class="ph-bold ph-magnifying-glass text-base"></i> Hostel Marketplace
+            </button>
+            <button onclick="App.navigate('hostel-admin')" id="btn-nav-hostel-admin" class="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all hidden">
+                <i class="ph-bold ph-chart-bar text-base"></i> Asset Operations
+            </button>
+            <button onclick="App.navigate('super-admin')" id="btn-nav-super-admin" class="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all hidden">
+                <i class="ph-bold ph-cpu text-base"></i> Core Terminal
+            </button>
+            <button onclick="App.navigate('ledger')" id="btn-nav-ledger" class="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all hidden">
+                <i class="ph-bold ph-wallet text-base"></i> Escrow Ledgers
+            </button>
+            <button onclick="App.navigate('settings')" id="btn-nav-settings" class="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i class="ph-bold ph-gear-six text-base"></i> Control Settings
+            </button>
+        </nav>
 
-                    <div class="mt-6 text-center text-xs text-slate-400">
-                        Don't have a cryptographic node? <a href="#" onclick="App.toggleAuthView('register')" class="text-blue-400 font-bold hover:underline">Register Asset</a>
+        <div class="p-4 border-t border-slate-800" id="sidebar-footer-controls">
+            <button onclick="App.logout()" id="btn-logout" class="w-full hidden items-center justify-center gap-2 bg-red-950/40 hover:bg-red-900/60 text-red-400 font-bold py-2.5 rounded-xl border border-red-900/40 text-xs transition-colors">
+                <i class="ph-bold ph-power text-sm"></i> Terminate Connection
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
+
+        <section id="view-gateway" class="view-section max-w-md mx-auto mt-6 lg:mt-12">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-extrabold text-white tracking-tight">Security Handshake</h2>
+                <p class="text-slate-400 text-xs mt-1">Authenticate node access credentials</p>
+            </div>
+            
+            <div class="bg-darkSurface border border-slate-800 rounded-2xl p-6 shadow-2xl">
+                <div class="flex bg-darkBg border border-slate-800 p-1 rounded-xl mb-6">
+                    <button onclick="App.toggleAuthForm('login')" id="btn-auth-login" class="w-1/2 py-2 text-xs font-bold rounded-lg text-white bg-accentBlue">Login Session</button>
+                    <button onclick="App.toggleAuthForm('register')" id="btn-auth-reg" class="w-1/2 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white">Register Node</button>
+                </div>
+
+                <form id="form-login" onsubmit="App.handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1.5 tracking-wider">Email Address</label>
+                        <input type="email" id="login-email" required class="w-full bg-darkBg border border-slate-800 text-white text-xs rounded-xl p-3 focus:outline-none focus:border-accentBlue transition-all">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1.5 tracking-wider">Password Token</label>
+                        <input type="password" id="login-password" required class="w-full bg-darkBg border border-slate-800 text-white text-xs rounded-xl p-3 focus:outline-none focus:border-accentBlue transition-all">
+                    </div>
+                    <button type="submit" class="w-full bg-accentBlue hover:bg-blue-700 text-white font-bold py-3 text-xs rounded-xl transition-all shadow-lg shadow-blue-600/10">
+                        Authorize Identity
+                    </button>
+                    <div class="p-3 bg-darkBg/60 border border-slate-800 rounded-xl text-[10px] font-mono text-slate-500 space-y-1">
+                        <div class="text-slate-400 font-bold mb-1 uppercase tracking-wider">Debug Access Tokens</div>
+                        <div class="flex justify-between"><span>student@muni.ac.ug</span><span>pass123</span></div>
+                        <div class="flex justify-between"><span>hostel@munistay.com</span><span>pass123</span></div>
                     </div>
                 </form>
 
-                <form id="form-register" class="auth-form-hidden" onsubmit="App.handleRegister(event)">
-                    <div class="space-y-4">
-                        <div class="grid grid-cols-2 gap-3">
-                            <label class="cursor-pointer">
-                                <input type="radio" name="reg-role" value="student" class="peer sr-only" checked>
-                                <div class="text-center p-3 rounded-xl border border-slate-700 bg-slate-900/50 text-slate-400 peer-checked:bg-primary/20 peer-checked:border-primary peer-checked:text-white transition-all text-xs font-bold">
-                                    <i class="ph-fill ph-student text-xl mb-1 block"></i> Student
-                                </div>
-                            </label>
-                            <label class="cursor-pointer">
-                                <input type="radio" name="reg-role" value="hostel-admin" class="peer sr-only">
-                                <div class="text-center p-3 rounded-xl border border-slate-700 bg-slate-900/50 text-slate-400 peer-checked:bg-emerald-500/20 peer-checked:border-emerald-500 peer-checked:text-white transition-all text-xs font-bold">
-                                    <i class="ph-fill ph-building text-xl mb-1 block"></i> Hostel Admin
-                                </div>
-                            </label>
-                        </div>
-                        
-                        <div>
-                            <div class="relative">
-                                <i class="ph-fill ph-user absolute left-3 top-3 text-slate-400"></i>
-                                <input type="text" id="reg-name" placeholder="Full Legal Name" required class="w-full bg-slate-900/50 border border-slate-700 text-white text-sm rounded-xl py-2.5 pl-10 pr-4 focus:outline-none focus:border-primary transition-all">
-                            </div>
-                        </div>
-                        <div>
-                            <div class="relative">
-                                <i class="ph-fill ph-envelope-simple absolute left-3 top-3 text-slate-400"></i>
-                                <input type="email" id="reg-email" placeholder="Unique Email Address" required class="w-full bg-slate-900/50 border border-slate-700 text-white text-sm rounded-xl py-2.5 pl-10 pr-4 focus:outline-none focus:border-primary transition-all">
-                            </div>
-                        </div>
-                        <div>
-                            <div class="relative">
-                                <i class="ph-fill ph-phone absolute left-3 top-3 text-slate-400"></i>
-                                <input type="tel" id="reg-phone" placeholder="Mobile Network Number" required class="w-full bg-slate-900/50 border border-slate-700 text-white text-sm rounded-xl py-2.5 pl-10 pr-4 focus:outline-none focus:border-primary transition-all">
-                            </div>
-                        </div>
-                        <div>
-                            <div class="relative">
-                                <i class="ph-fill ph-lock-key absolute left-3 top-3 text-slate-400"></i>
-                                <input type="password" id="reg-password" placeholder="Secure Password" required class="w-full bg-slate-900/50 border border-slate-700 text-white text-sm rounded-xl py-2.5 pl-10 pr-4 focus:outline-none focus:border-primary transition-all">
-                            </div>
-                        </div>
-                        <button type="submit" class="w-full bg-white text-slate-900 hover:bg-slate-200 font-bold py-3 rounded-xl transition-all shadow-lg mt-2 text-sm">
-                            Generate Registration Block
-                        </button>
+                <form id="form-register" onsubmit="App.handleRegister(event)" class="space-y-4 hidden">
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="reg-role" value="student" class="peer sr-only" checked>
+                            <div class="text-center p-2 rounded-xl border border-slate-800 bg-darkBg text-slate-500 peer-checked:border-accentBlue peer-checked:text-white transition-all text-[11px] font-bold">Student</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="reg-role" value="hostel-admin" class="peer sr-only">
+                            <div class="text-center p-2 rounded-xl border border-slate-800 bg-darkBg text-slate-500 peer-checked:border-accentNeon peer-checked:text-white transition-all text-[11px] font-bold">Hostel Admin</div>
+                        </label>
                     </div>
-
-                    <div class="mt-6 text-center text-xs text-slate-400">
-                        Already have a session key? <a href="#" onclick="App.toggleAuthView('login')" class="text-blue-400 font-bold hover:underline">Authenticate</a>
+                    <div>
+                        <input type="text" id="reg-name" placeholder="Legal Full Name" required class="w-full bg-darkBg border border-slate-800 text-white text-xs rounded-xl p-3 focus:outline-none focus:border-accentBlue transition-all">
                     </div>
+                    <div>
+                        <input type="email" id="reg-email" placeholder="System Unique Email" required class="w-full bg-darkBg border border-slate-800 text-white text-xs rounded-xl p-3 focus:outline-none focus:border-accentBlue transition-all">
+                    </div>
+                    <div>
+                        <input type="tel" id="reg-phone" placeholder="Unique Phone (e.g., 077...)" required class="w-full bg-darkBg border border-slate-800 text-white text-xs rounded-xl p-3 focus:outline-none focus:border-accentBlue transition-all">
+                    </div>
+                    <div>
+                        <input type="password" id="reg-password" placeholder="System Security Password" required class="w-full bg-darkBg border border-slate-800 text-white text-xs rounded-xl p-3 focus:outline-none focus:border-accentBlue transition-all">
+                    </div>
+                    <button type="submit" class="w-full bg-white text-slate-900 font-bold py-3 text-xs rounded-xl transition-all shadow-lg">
+                        Publish Record Set
+                    </button>
                 </form>
-
             </div>
-        </div>
-    </div>
+        </section>
 
-    <div id="app-core">
-        
-        <header class="glass-panel sticky top-0 z-40 shadow-sm transition-all">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
-                
-                <div class="flex items-center gap-3 cursor-pointer">
-                    <div class="h-10 w-10 bg-primary text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
-                        <i class="ph-fill ph-buildings text-xl"></i>
-                    </div>
-                    <div>
-                        <span class="text-lg font-extrabold tracking-tight block text-slate-900 leading-tight">MuniStay</span>
-                        <span id="nav-role-badge" class="text-[10px] font-bold text-primary tracking-widest uppercase block">Workspace</span>
+        <section id="view-student" class="view-section">
+            <div class="bg-gradient-to-br from-blue-950 to-slate-900 border border-slate-800 rounded-2xl p-6 text-white mb-8">
+                <h1 class="text-xl font-extrabold tracking-tight">Ecosystem Terminal: Student View</h1>
+                <p class="text-slate-400 text-xs mt-1">Cross-reference compatibility metrics against hostels adjacent to Muni University main gate.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-darkSurface border border-slate-800 rounded-2xl p-5 h-fit">
+                    <h2 class="text-xs font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2"><i class="ph ph-git-merge text-accentBlue"></i> MatchSphere Matrix</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[10px] text-slate-400 uppercase tracking-wide block mb-1">Study Routines</label>
+                            <select id="algo-study" class="w-full bg-darkBg border border-slate-800 text-white text-xs rounded-xl p-2.5 focus:outline-none">
+                                <option value="1">Late Night Researcher</option>
+                                <option value="2">Early Morning Routine</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 uppercase tracking-wide block mb-1">Social Footprint</label>
+                            <select id="algo-social" class="w-full bg-darkBg border border-slate-800 text-white text-xs rounded-xl p-2.5 focus:outline-none">
+                                <option value="1">Quiet / Zero Guest Nodes</option>
+                                <option value="2">Collaborative Environment</option>
+                            </select>
+                        </div>
+                        <div id="match-output" class="hidden bg-emerald-950/30 border border-emerald-900/50 text-accentNeon text-xs p-3 rounded-xl text-center font-bold">
+                            Vector Score: <span id="match-score">0%</span>
+                        </div>
+                        <button onclick="App.runMatching()" class="w-full bg-accentBlue text-white text-xs font-bold py-2.5 rounded-xl">Execute Matching Model</button>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-4">
-                    <div class="hidden sm:block text-right">
-                        <div id="nav-user-name" class="text-sm font-bold text-slate-900">User Name</div>
-                        <div class="flex items-center gap-1.5 justify-end mt-0.5">
-                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span class="text-[9px] text-slate-500 font-mono uppercase tracking-wider">Session Active</span>
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="bg-darkSurface border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <h3 class="text-sm font-bold text-white">Verified Nodes Near Campus</h3>
+                        <span class="text-[10px] font-mono text-slate-500">Filters: Radius < 1.2km</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="bg-darkSurface border border-slate-800 rounded-xl overflow-hidden">
+                            <div class="h-32 bg-slate-800 relative">
+                                <img src="https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=400" class="w-full h-full object-cover opacity-60" alt="Hostel">
+                                <span class="absolute top-2 right-2 bg-darkBg/90 border border-slate-800 text-[9px] font-mono font-bold px-2 py-0.5 rounded text-white">450K UGX / Sem</span>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-bold text-xs text-white">Sunrise Elite Residency</h4>
+                                <p class="text-[10px] text-slate-500 mt-1">Ombaci Road Interface</p>
+                                <button onclick="App.simulateAction('Escrow Node Generated for Sunrise Elite')" class="mt-3 w-full bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold py-2 rounded-lg transition-colors">Commit Escrow Deposit</button>
+                            </div>
                         </div>
                     </div>
-                    <button onclick="App.logout()" class="h-9 w-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors border border-slate-200">
-                        <i class="ph-bold ph-power text-lg"></i>
-                    </button>
                 </div>
             </div>
-        </header>
+        </section>
 
-        <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 w-full mb-20 lg:mb-0">
+        <section id="view-hostel-admin" class="view-section">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-xl font-extrabold text-white">Asset Operations</h1>
+                    <p class="text-xs text-slate-500 mt-0.5">Hostel Property Infrastructure Control Matrix</p>
+                </div>
+                <button onclick="App.simulateAction('Inventory Frame Provisioned')" class="bg-accentBlue text-white text-xs font-bold px-4 py-2 rounded-xl">+ Allocate Space</button>
+            </div>
 
-            <section id="view-student" class="view-section">
-                <div class="bg-gradient-to-br from-primary to-blue-900 rounded-3xl p-6 sm:p-10 text-white shadow-lg mb-8 relative overflow-hidden">
-                    <div class="absolute -right-10 -top-10 text-white/10 text-[150px] pointer-events-none"><i class="ph-fill ph-student"></i></div>
-                    <div class="relative z-10">
-                        <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2">Find Your Space at Muni.</h1>
-                        <p class="text-blue-100/90 max-w-lg text-sm sm:text-base">AI-driven roommate matching, structurally verified properties, and instant secure bookings.</p>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-darkSurface border border-slate-800 rounded-2xl p-5">
+                    <h3 class="text-xs font-bold text-white uppercase tracking-wider mb-4">Algorithmic Rate Yield</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-[10px] text-slate-500 font-mono mb-1"><span>Target Occupancy</span><span id="lbl-occ" class="text-accentBlue">85%</span></div>
+                            <input type="range" id="slide-occ" min="40" max="100" value="85" class="w-full accent-accentBlue h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[10px] text-slate-500 font-mono mb-1"><span>Market Index multipliers</span><span id="lbl-inf" class="text-accentBlue">1.0x</span></div>
+                            <input type="range" id="slide-inf" min="1" max="2" step="0.1" value="1" class="w-full accent-accentBlue h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                        <div class="p-3 bg-darkBg border border-slate-800 text-center rounded-xl">
+                            <span class="text-[9px] text-slate-500 block uppercase">Calculated Matrix Rent</span>
+                            <span id="price-output" class="text-base font-extrabold text-white mt-1 block">UGX 450,000</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="bg-white rounded-2xl p-6 shadow-glass border border-slate-100 flex flex-col h-full">
-                        <div class="flex items-center gap-2 mb-4">
-                            <i class="ph-fill ph-git-merge text-primary text-xl"></i>
-                            <h2 class="text-sm font-bold text-slate-900">MatchSphere Engine</h2>
-                        </div>
-                        <div class="space-y-4 flex-grow">
-                            <div>
-                                <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Study Habits</label>
-                                <select id="algo-study" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg p-3 focus:outline-none focus:border-primary transition-all">
-                                    <option value="1">Late Night Researcher</option>
-                                    <option value="2">Early Morning Routine</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Social Preference</label>
-                                <select id="algo-social" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg p-3 focus:outline-none focus:border-primary transition-all">
-                                    <option value="1">Quiet / No Guests</option>
-                                    <option value="2">Collaborative & Open</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="mt-6">
-                            <div id="match-output" class="hidden bg-emerald-50 text-emerald-800 text-xs p-3 rounded-lg border border-emerald-100 mb-3 text-center font-bold">
-                                Compatibility Index: <span id="match-score" class="text-sm font-extrabold">0%</span>
-                            </div>
-                            <button onclick="App.runMatching()" class="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-3 rounded-lg transition-all shadow-md">
-                                Compute Vectors
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="lg:col-span-2 space-y-4">
-                        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
-                            <i class="ph-fill ph-shield-check text-emerald-500"></i> Cryptographically Verified
-                        </h2>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                            <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-glass hover:shadow-lg transition-shadow">
-                                <div class="h-40 bg-slate-200 relative">
-                                    <img src="https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover" alt="Hostel">
-                                    <div class="absolute bottom-2 right-2 bg-slate-900/90 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded">UGX 450K / Sem</div>
-                                </div>
-                                <div class="p-4">
-                                    <h3 class="font-bold text-sm text-slate-900">Sunrise Elite Residency</h3>
-                                    <p class="text-[11px] text-slate-500 mt-1 flex items-center gap-1"><i class="ph ph-map-pin"></i> Ombaci Rd (450m from gate)</p>
-                                    <button onclick="App.simulateAction('Sunrise Elite Booking Initiated')" class="mt-4 w-full bg-primary/10 text-primary hover:bg-primary hover:text-white text-xs font-bold py-2 rounded-lg transition-colors">
-                                        Initialize Escrow
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="lg:col-span-2 bg-darkSurface border border-slate-800 rounded-2xl overflow-hidden">
+                    <div class="p-4 bg-darkBg/50 border-b border-slate-800"><h3 class="text-xs font-bold text-slate-400 uppercase">Live Real-Estate Node Space</h3></div>
+                    <table class="w-full text-left text-xs text-slate-400">
+                        <thead class="bg-darkBg text-slate-500 font-mono text-[10px] uppercase border-b border-slate-800">
+                            <tr><th class="p-3">Room Ident</th><th class="p-3">Profile Spec</th><th class="p-3">State</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800">
+                            <tr><td class="p-3 font-mono text-white">RM-101</td><td class="p-3">Single Room Frame</td><td class="p-3"><span class="text-accentNeon font-bold bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-900/50">Escrow Locked</span></td></tr>
+                        </tbody>
+                    </table>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <section id="view-hostel-admin" class="view-section">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-                    <div>
-                        <h1 class="text-2xl font-extrabold text-slate-900">Asset Operations</h1>
-                        <p class="text-xs text-slate-500 font-medium mt-1">Property Management Interface</p>
-                    </div>
-                    <button onclick="App.simulateAction('Provisioning new asset room slot...')" class="bg-primary text-white text-xs font-bold px-5 py-2.5 rounded-lg shadow-md hover:bg-blue-800 transition-colors">
-                        + Add Inventory
-                    </button>
-                </div>
+        <section id="view-super-admin" class="view-section">
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 font-mono mb-6">
+                <div class="text-xs text-accentNeon font-bold flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-accentNeon animate-pulse"></span> Root Operational Shell</div>
+                <div class="text-[10px] text-slate-500 mt-1">Virtual Infrastructure Node Connection Verified</div>
+            </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="bg-white rounded-2xl p-6 shadow-glass border border-slate-100">
-                        <h2 class="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-                            <i class="ph-fill ph-chart-line-up text-primary text-lg"></i> Dynamic Yield Pricing
-                        </h2>
-                        <div class="space-y-5">
-                            <div>
-                                <div class="flex justify-between text-[10px] font-bold text-slate-500 uppercase mb-2">
-                                    <span>Target Capacity</span>
-                                    <span id="lbl-occ" class="text-primary">85%</span>
-                                </div>
-                                <input type="range" id="slide-occ" min="40" max="100" value="85" class="w-full accent-primary h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer">
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-[10px] font-bold text-slate-500 uppercase mb-2">
-                                    <span>Inflation Index</span>
-                                    <span id="lbl-inf" class="text-primary">1.0x</span>
-                                </div>
-                                <input type="range" id="slide-inf" min="1" max="2" step="0.1" value="1" class="w-full accent-primary h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer">
-                            </div>
-                            <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 text-center">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Calculated Equilibrium Rate</span>
-                                <span id="price-output" class="text-xl font-extrabold text-slate-900">UGX 450,000</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="lg:col-span-2 bg-white rounded-2xl shadow-glass border border-slate-100 overflow-hidden flex flex-col">
-                        <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                            <h3 class="text-sm font-bold text-slate-900">Node Inventory State</h3>
-                            <span class="bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded">Live Matrix</span>
-                        </div>
-                        <div class="overflow-x-auto flex-grow">
-                            <table class="w-full text-left text-xs">
-                                <thead class="bg-slate-50 text-slate-500 font-bold uppercase border-b border-slate-100">
-                                    <tr>
-                                        <th class="px-4 py-3">Room ID</th>
-                                        <th class="px-4 py-3">Specification</th>
-                                        <th class="px-4 py-3">State Matrix</th>
-                                        <th class="px-4 py-3 text-right">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-50 font-medium text-slate-700">
-                                    <tr class="hover:bg-slate-50 transition-colors">
-                                        <td class="px-4 py-4 font-bold text-slate-900">RM-101-A</td>
-                                        <td class="px-4 py-4">Single Suite</td>
-                                        <td class="px-4 py-4"><span class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded border border-emerald-100">Escrow Settled</span></td>
-                                        <td class="px-4 py-4 text-right"><button onclick="App.simulateAction('Opening Node Terminal')" class="text-slate-400 hover:text-primary"><i class="ph-bold ph-sliders-horizontal text-base"></i></button></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="view-super-admin" class="view-section">
-                <div class="bg-slate-900 rounded-2xl p-6 shadow-lg mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-slate-800">
-                    <div>
-                        <h1 class="text-xl font-mono font-bold text-white flex items-center gap-2">
-                            <i class="ph-fill ph-terminal-window text-emerald-400"></i> Root Core Terminal
-                        </h1>
-                        <p class="text-[11px] font-mono text-slate-400 mt-1">Host: ug-arua-muni-primary01</p>
-                    </div>
-                    <div class="bg-slate-950 px-3 py-1.5 rounded border border-slate-800 flex items-center gap-2">
-                        <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span class="text-[10px] font-mono text-slate-300">SYSTEM HEALTH: OPTIMAL</span>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-darkSurface border border-slate-800 rounded-2xl p-5">
+                    <h3 class="text-xs font-bold text-white uppercase tracking-wider mb-3">Micro-Escrow Split Processing</h3>
+                    <div class="p-3 bg-darkBg border border-slate-800 rounded-xl flex justify-between items-center">
+                        <div><span class="text-xs font-bold text-white block">Batch Authorization</span><span class="text-[9px] font-mono text-slate-500">Muni Network Node</span></div>
+                        <button onclick="App.simulateAction('Gateway Settlement Implemented')" class="bg-white text-slate-900 font-bold px-3 py-1.5 text-[10px] rounded-lg">Execute Split</button>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div class="bg-white rounded-2xl shadow-glass border border-slate-100 p-6">
-                        <h3 class="text-sm font-bold text-slate-900 mb-4">Micro-Escrow Split Engine</h3>
-                        
-                        <div class="bg-slate-50 rounded-xl p-5 border border-slate-100 grid grid-cols-3 gap-4 text-center mb-6">
-                            <div>
-                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Deposit</span>
-                                <span class="text-sm font-extrabold text-slate-900">400K</span>
-                            </div>
-                            <div class="border-x border-slate-200">
-                                <span class="text-[9px] font-bold text-blue-400 uppercase block">Fee (2.5%)</span>
-                                <span class="text-sm font-extrabold text-primary">10K</span>
-                            </div>
-                            <div>
-                                <span class="text-[9px] font-bold text-emerald-400 uppercase block">Payout</span>
-                                <span class="text-sm font-extrabold text-emerald-600">390K</span>
-                            </div>
-                        </div>
-
-                        <div class="border border-slate-100 rounded-xl p-4 flex justify-between items-center hover:bg-slate-50 transition-colors">
-                            <div>
-                                <span class="font-bold text-xs text-slate-900 block">Batch #8942-MoMo</span>
-                                <span class="text-[10px] text-slate-500">MTN Mobile Money Gateway</span>
-                            </div>
-                            <button onclick="App.simulateAction('Executing batch authorization...')" class="text-[10px] font-bold bg-slate-900 text-white px-3 py-2 rounded-lg hover:bg-slate-800">Authorize</button>
-                        </div>
+                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 flex flex-col font-mono h-48">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-2 mb-2 text-[10px]">
+                        <span class="text-accentBlue font-bold">Log Buffer</span>
+                        <button onclick="App.clearLogs()" class="text-slate-600 hover:text-slate-400">Flush</button>
                     </div>
-
-                    <div class="bg-slate-950 rounded-2xl shadow-lg border border-slate-800 p-5 flex flex-col font-mono">
-                        <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-3">
-                            <span class="text-xs font-bold text-blue-400">System Runtime Logs</span>
-                            <button onclick="App.clearLogs()" class="text-[10px] text-slate-500 hover:text-white">Clear</button>
-                        </div>
-                        <div id="terminal-logs" class="space-y-2 overflow-y-auto max-h-48 text-[10px] text-slate-400">
-                            <div>[SYS] Connection pool initialized.</div>
-                        </div>
-                    </div>
+                    <div id="terminal-logs" class="space-y-1 text-[10px] text-slate-400 overflow-y-auto flex-grow"></div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-        </main>
-    </div>
+        <section id="view-ledger" class="view-section">
+            <div class="mb-6">
+                <h1 class="text-xl font-extrabold text-white">Financial Matrix</h1>
+                <p class="text-xs text-slate-500 mt-0.5">Cryptographic transaction logs processing through local Telecom APIs (MTN/Airtel)</p>
+            </div>
+
+            <div class="bg-darkSurface border border-slate-800 rounded-2xl overflow-hidden">
+                <table class="w-full text-left text-xs text-slate-400">
+                    <thead class="bg-darkBg text-slate-500 font-mono text-[10px] uppercase border-b border-slate-800">
+                        <tr><th class="p-4">Tx Hash / Token</th><th class="p-4">Ecosystem Party</th><th class="p-4">Volume</th><th class="p-4">Gateway State</th></tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800 font-medium">
+                        <tr>
+                            <td class="p-4 font-mono text-slate-300">TXN-89423-MOMO</td>
+                            <td class="p-4">Sunrise Elite &lt;&gt; Student Node</td>
+                            <td class="p-4 text-white font-bold">450,000 UGX</td>
+                            <td class="p-4"><span class="text-accentNeon bg-emerald-950/30 border border-emerald-900/50 px-2.5 py-1 rounded-md font-mono text-[10px]">SUCCESS</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="view-settings" class="view-section">
+            <div class="mb-6">
+                <h1 class="text-xl font-extrabold text-white">System Settings</h1>
+                <p class="text-xs text-slate-500 mt-0.5">Configure system security thresholds and access keys.</p>
+            </div>
+
+            <div class="bg-darkSurface border border-slate-800 rounded-2xl p-6 max-w-2xl space-y-6">
+                <div>
+                    <h3 class="text-xs font-bold text-white uppercase tracking-wider mb-3">Communication Handshakes</h3>
+                    <label class="flex items-center gap-3 cursor-pointer group">
+                        <input type="checkbox" checked class="rounded bg-darkBg border-slate-800 text-accentBlue focus:ring-0">
+                        <span class="text-xs text-slate-300 group-hover:text-white transition-colors">Broadcast ledger modifications via localized SMS alerts</span>
+                    </label>
+                </div>
+                <hr class="border-slate-800">
+                <div>
+                    <h3 class="text-xs font-bold text-white uppercase tracking-wider mb-3">Security Cryptography</h3>
+                    <button onclick="App.simulateAction('Rotated Encryption Keys')" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors">Rotate Session Keys</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
 
     <script>
         const App = {
             state: {
-                // Simulated Database Arrays
                 users: [
-                    { name: 'Muni Student', email: 'student@muni.ac.ug', phone: '0770000001', password: 'pass123', role: 'student' },
-                    { name: 'Sunrise Elite', email: 'hostel@munistay.com', phone: '0770000002', password: 'pass123', role: 'hostel-admin' },
-                    { name: 'System Root', email: 'admin@munistay.com', phone: '0770000003', password: 'pass123', role: 'super-admin' }
+                    { name: 'Muni Student Alpha', email: 'student@muni.ac.ug', phone: '0770000001', password: 'pass123', role: 'student' },
+                    { name: 'Sunrise Admin Node', email: 'hostel@munistay.com', phone: '0770000002', password: 'pass123', role: 'hostel-admin' },
+                    { name: 'System Root Master', email: 'admin@munistay.com', phone: '0770000003', password: 'pass123', role: 'super-admin' }
                 ],
                 currentUser: null,
+                activeView: 'gateway',
                 baseRent: 450000
             },
 
             init() {
-                this.bindEvents();
+                this.navigate(this.state.activeView);
+                this.bindInputs();
+                this.log("MuniStay System Engine initialized in Black Geometric Display mode.");
             },
 
-            bindEvents() {
-                document.getElementById('slide-occ').addEventListener('input', () => this.runYieldEngine());
-                document.getElementById('slide-inf').addEventListener('input', () => this.runYieldEngine());
+            bindInputs() {
+                document.getElementById('slide-occ')?.addEventListener('input', () => this.runYieldEngine());
+                document.getElementById('slide-inf')?.addEventListener('input', () => this.runYieldEngine());
             },
 
-            // --- Authentication Core ---
-            toggleAuthView(view) {
-                const loginForm = document.getElementById('form-login');
-                const regForm = document.getElementById('form-register');
+            toggleMobileSidebar() {
+                const sidebar = document.getElementById('main-sidebar');
+                sidebar.classList.toggle('-translate-x-full');
+            },
+
+            toggleAuthForm(target) {
+                const isLogin = target === 'login';
+                document.getElementById('form-login').classList.toggle('hidden', !isLogin);
+                document.getElementById('form-register').classList.toggle('hidden', isLogin);
                 
-                if(view === 'register') {
-                    loginForm.classList.replace('auth-form-active', 'auth-form-hidden');
-                    regForm.classList.replace('auth-form-hidden', 'auth-form-active');
-                } else {
-                    regForm.classList.replace('auth-form-active', 'auth-form-hidden');
-                    loginForm.classList.replace('auth-form-hidden', 'auth-form-active');
-                }
+                document.getElementById('btn-auth-login').className = isLogin ? "w-1/2 py-2 text-xs font-bold rounded-lg text-white bg-accentBlue" : "w-1/2 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white";
+                document.getElementById('btn-auth-reg').className = !isLogin ? "w-1/2 py-2 text-xs font-bold rounded-lg text-white bg-accentBlue" : "w-1/2 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white";
+            },
+
+            navigate(viewId) {
+                this.state.activeView = viewId;
+                
+                // Mount target view DOM component
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('view-active'));
+                document.getElementById(`view-${viewId}`)?.classList.add('view-active');
+
+                // Adjust active navbar styling anchors
+                document.querySelectorAll('[id^="btn-nav-"]').forEach(el => el.classList.remove('sidebar-item-active'));
+                document.getElementById(`btn-nav-${viewId}`)?.classList.add('sidebar-item-active');
+
+                // Close mobile layout elements if opened during shift
+                document.getElementById('main-sidebar').classList.add('-translate-x-full');
+                this.log(`Navigation context translated to section point: [${viewId.toUpperCase()}]`);
             },
 
             handleRegister(e) {
@@ -420,19 +409,17 @@
                 const password = document.getElementById('reg-password').value;
                 const role = document.querySelector('input[name="reg-role"]:checked').value;
 
-                // Unique Validation Checks
-                const emailExists = this.state.users.some(u => u.email.toLowerCase() === email.toLowerCase());
-                const phoneExists = this.state.users.some(u => u.phone === phone);
+                if (this.state.users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+                    return this.toast('Key Generation Exception: Duplicate user email profile detected.', 'error');
+                }
+                if (this.state.users.some(u => u.phone === phone)) {
+                    return this.toast('Key Generation Exception: Device hardware number is duplicated.', 'error');
+                }
 
-                if (emailExists) return this.toast('Registration Failed: Email address is already linked to an active node.', 'error');
-                if (phoneExists) return this.toast('Registration Failed: Mobile number is already registered in the ecosystem.', 'error');
-
-                // Write to simulated DB
                 this.state.users.push({ name, email, phone, password, role });
-                
-                this.toast('Registration Successful! Asset node generated. Please authenticate.', 'success');
+                this.toast('Node verification row generated. Authenticate session credentials.', 'success');
                 e.target.reset();
-                this.toggleAuthView('login');
+                this.toggleAuthForm('login');
             },
 
             handleLogin(e) {
@@ -444,77 +431,69 @@
 
                 if (user) {
                     this.state.currentUser = user;
-                    this.launchApp(user);
-                    document.getElementById('login-password').value = '';
+                    this.lockInSession(user);
                 } else {
-                    this.toast('Authentication Failed: Invalid cryptographic credentials.', 'error');
+                    this.toast('Authentication Interrupted: Missing payload match key credentials.', 'error');
                 }
+            },
+
+            lockInSession(user) {
+                // Mutate global identity frame values
+                document.getElementById('user-display-name').innerText = user.name;
+                document.getElementById('user-display-role').innerText = user.role.replace('-', ' ');
+                document.getElementById('avatar-letters').innerText = user.name.substring(0,2).toUpperCase();
+                
+                // Structural updates inside runtime dashboard navigation matrix
+                document.getElementById('sidebar-user-token').classList.remove('hidden');
+                document.getElementById('btn-logout').classList.replace('hidden', 'flex');
+                
+                // Display operational submenus based on role level security tokens
+                document.getElementById('btn-nav-student').classList.toggle('hidden', user.role !== 'student');
+                document.getElementById('btn-nav-hostel-admin').classList.toggle('hidden', user.role !== 'hostel-admin');
+                document.getElementById('btn-nav-super-admin').classList.toggle('hidden', user.role !== 'super-admin');
+                document.getElementById('btn-nav-ledger').classList.remove('hidden');
+
+                this.navigate(user.role);
+                this.toast(`Handshake acknowledged: Welcome back ${user.name}`, 'success');
             },
 
             logout() {
                 this.state.currentUser = null;
-                document.getElementById('app-core').classList.remove('view-active');
+                document.getElementById('sidebar-user-token').classList.add('hidden');
+                document.getElementById('btn-logout').classList.replace('flex', 'hidden');
                 
-                setTimeout(() => {
-                    document.getElementById('auth-gateway').classList.add('view-active');
-                    this.toast('Session successfully terminated.', 'info');
-                }, 400);
+                document.getElementById('btn-nav-student').classList.add('hidden');
+                document.getElementById('btn-nav-hostel-admin').classList.add('hidden');
+                document.getElementById('btn-nav-super-admin').classList.add('hidden');
+                document.getElementById('btn-nav-ledger').classList.add('hidden');
+
+                document.getElementById('login-email').value = '';
+                document.getElementById('login-password').value = '';
+                
+                this.navigate('gateway');
+                this.toast('Ecosystem connection terminated.', 'info');
             },
 
-            // --- Routing & Rendering ---
-            launchApp(user) {
-                // UI Updates
-                document.getElementById('nav-user-name').innerText = user.name;
-                document.getElementById('nav-role-badge').innerText = user.role.replace('-', ' ');
-
-                // Transition Views
-                document.getElementById('auth-gateway').classList.remove('view-active');
-                
-                setTimeout(() => {
-                    document.getElementById('app-core').classList.add('view-active');
-                    this.switchRole(user.role);
-                    this.runYieldEngine();
-                    this.toast(`Welcome back, ${user.name}. Handshake secured.`, 'success');
-                    this.log(`Session established for UUID [${user.email}] as ${user.role.toUpperCase()}`);
-                }, 400);
-            },
-
-            switchRole(role) {
-                // Security: Hide all internal views
-                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('view-active'));
-                
-                // Mount permitted view based on user role payload
-                const targetView = document.getElementById(`view-${role}`);
-                if (targetView) targetView.classList.add('view-active');
-            },
-
-            // --- Utilities & Simulations ---
             runYieldEngine() {
                 const occ = document.getElementById('slide-occ').value;
                 const inf = document.getElementById('slide-inf').value;
                 
-                document.getElementById('lbl-occ').innerText = `${occ}%`;
-                document.getElementById('lbl-inf').innerText = `${inf}x`;
+                if(document.getElementById('lbl-occ')) document.getElementById('lbl-occ').innerText = `${occ}%`;
+                if(document.getElementById('lbl-inf')) document.getElementById('lbl-inf').innerText = `${inf}x`;
 
                 let calculated = Math.round((this.state.baseRent * (occ / 100)) * parseFloat(inf));
                 if (calculated < 300000) calculated = 320000; 
 
-                document.getElementById('price-output').innerText = `UGX ${calculated.toLocaleString()}`;
+                if(document.getElementById('price-output')) document.getElementById('price-output').innerText = `UGX ${calculated.toLocaleString()}`;
             },
 
             runMatching() {
-                const study = document.getElementById('algo-study').value;
-                const social = document.getElementById('algo-social').value;
                 const output = document.getElementById('match-output');
-                
-                let score = 61; 
-                if(study === "1" && social === "1") score = 96;
-                if(study === "2" && social === "2") score = 88;
+                let score = Math.floor(Math.random() * (98 - 70 + 1)) + 70;
                 
                 document.getElementById('match-score').innerText = `${score}%`;
                 output.classList.remove('hidden');
-                
-                this.simulateAction(`Computed MatchSphere Vectors: ${score}% match found.`);
+                this.simulateAction(`Computed compatibility vectors index: Match rate established at ${score}%`);
             },
 
             simulateAction(msg) {
@@ -526,19 +505,18 @@
                 const container = document.getElementById('toast-container');
                 const toast = document.createElement('div');
                 
-                let iconStr = '<i class="ph-fill ph-check-circle text-emerald-500 text-lg"></i>';
-                if(type === 'error') iconStr = '<i class="ph-fill ph-warning-circle text-red-500 text-lg"></i>';
-                if(type === 'info') iconStr = '<i class="ph-fill ph-info text-blue-500 text-lg"></i>';
+                let icon = '<i class="ph-fill ph-check-circle text-emerald-400 text-base"></i>';
+                if(type === 'error') icon = '<i class="ph-fill ph-warning-circle text-red-400 text-base"></i>';
+                if(type === 'info') icon = '<i class="ph-fill ph-info text-blue-400 text-base"></i>';
                 
-                toast.className = `bg-white p-4 rounded-xl shadow-2xl border border-slate-100 flex items-start gap-3 transition-all duration-300 transform translate-y-4 opacity-0 pointer-events-auto`;
-                toast.innerHTML = `${iconStr}<div class="text-xs font-bold text-slate-800 leading-tight mt-0.5">${message}</div>`;
+                toast.className = `bg-darkSurface border border-slate-800 p-4 rounded-xl shadow-2xl flex items-start gap-3 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto`;
+                toast.innerHTML = `${icon}<div class="text-xs font-bold text-slate-200 leading-tight">${message}</div>`;
                 
                 container.appendChild(toast);
-                
-                requestAnimationFrame(() => toast.classList.remove('translate-y-4', 'opacity-0'));
+                requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
 
                 setTimeout(() => {
-                    toast.classList.add('translate-y-4', 'opacity-0');
+                    toast.classList.add('translate-y-2', 'opacity-0');
                     setTimeout(() => toast.remove(), 300);
                 }, 4000);
             },
@@ -546,22 +524,17 @@
             log(text) {
                 const box = document.getElementById('terminal-logs');
                 if(!box) return;
-                
                 const time = new Date().toTimeString().split(' ')[0];
-                const entry = document.createElement('div');
-                entry.innerHTML = `<span class="text-slate-500">[${time}]</span> <span class="text-emerald-400">>></span> ${text}`;
-                
-                box.appendChild(entry);
+                box.innerHTML += `<div><span class="text-slate-600">[${time}]</span> <span class="text-accentNeon">&gt;&gt;</span> ${text}</div>`;
                 box.scrollTop = box.scrollHeight;
             },
 
             clearLogs() {
                 const box = document.getElementById('terminal-logs');
-                if(box) box.innerHTML = '<div>[SYS] Logs cleared.</div>';
+                if(box) box.innerHTML = '<div>[SYS] Log lines flushed.</div>';
             }
         };
 
-        // Initialize App State
         document.addEventListener('DOMContentLoaded', () => App.init());
     </script>
 </body>
